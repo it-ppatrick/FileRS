@@ -8,14 +8,36 @@
 import SwiftUI
 
 struct ContentView: View {
+    // --- Add this new state variable for the date ---
+    @State private var documentDate = Date() // Defaults to today's date
+    
+    @State private var currentStep = 1
+    @State private var selectedFile: URL?
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        VStack(spacing: 20) {
+            Text("File Renamer")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+
+            // --- Update this logic to include Step 2 ---
+            if currentStep == 1 {
+                Step1_UploadView(
+                    selectedFile: $selectedFile,
+                    currentStep: $currentStep
+                )
+            } else if currentStep == 2 {
+                Step2_DateView(
+                    documentDate: $documentDate,
+                    currentStep: $currentStep
+                )
+            } else {
+                // Placeholder for the next steps
+                Text("You are on step \(currentStep)")
+            }
         }
         .padding()
+        .frame(minWidth: 500, minHeight: 450) // Increased height for the calendar
     }
 }
 
