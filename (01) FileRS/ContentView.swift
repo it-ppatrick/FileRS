@@ -14,6 +14,9 @@ struct ContentView: View {
     // --- Add this new state variable for the source company ---
     @State private var selectedSourceCompany: String = ""
 
+    // --- Add this new state variable for the target company ---
+    @State private var selectedTargetCompany: String = ""
+
 
     @State private var currentStep = 1
     @State private var selectedFile: URL?
@@ -24,7 +27,7 @@ struct ContentView: View {
                 .font(.largeTitle)
                 .fontWeight(.bold)
 
-            // --- Update this logic to include Step 3 ---
+            // --- Update this logic to include Step 4 ---
             if currentStep == 1 {
                 Step1_UploadView(
                     selectedFile: $selectedFile,
@@ -38,6 +41,11 @@ struct ContentView: View {
             } else if currentStep == 3 {
                 Step3_SourceCompanyView(
                     selectedSourceCompany: $selectedSourceCompany,
+                    currentStep: $currentStep
+                )
+            } else if currentStep == 4 {
+                Step4_TargetCompanyView(
+                    selectedTargetCompany: $selectedTargetCompany,
                     currentStep: $currentStep
                 )
             }
