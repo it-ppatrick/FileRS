@@ -10,13 +10,15 @@ import SwiftUI
 struct Step5_SummaryView: View {
     // All the data from previous steps
     @Binding var selectedFile: URL?
+    @Binding var fileBookmark: Data?
     @Binding var documentDate: Date
     @Binding var selectedSourceCompany: String
     @Binding var selectedTargetCompany: String
     @Binding var currentStep: Int
 
-    // State for the new filename
     @State private var newFileName = ""
+    @State private var renameMessage = ""
+    @State private var didSucceed: Bool? = nil
 
     var body: some View {
         VStack(spacing: 20) {
@@ -24,7 +26,6 @@ struct Step5_SummaryView: View {
                 .font(.title)
                 .fontWeight(.semibold)
 
-            // Display a summary of the selected data
             VStack(alignment: .leading, spacing: 10) {
                 Text("Original File: \(selectedFile?.lastPathComponent ?? "N/A")")
                 Text("Document Date: \(documentDate, formatter: dateFormatter)")
@@ -39,14 +40,18 @@ struct Step5_SummaryView: View {
             .background(Color.secondary.opacity(0.1))
             .cornerRadius(10)
 
+            if !renameMessage.isEmpty {
+                Text(renameMessage)
+                    .foregroundColor(didSucceed == true ? .green : .red)
+            }
 
-            // Navigation and action buttons
             HStack {
                 Button(action: {
-                    currentStep = 4 // Go back to Step 4
+                    currentStep = 4
                 }) {
                     Text("← Back")
                 }
+                .disabled(didSucceed == true) // Disable if rename succeeded
 
                 Spacer()
 
@@ -54,48 +59,55 @@ struct Step5_SummaryView: View {
                     Text("Rename File")
                 }
                 .tint(.accentColor)
+                .disabled(didSucceed == true) // Disable after success
             }
         }
         .onAppear(perform: generateNewFileName)
     }
 
-    // Formats the date for the filename
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter
     }
 
-    // Constructs the new filename
     private func generateNewFileName() {
         guard let selectedFile = selectedFile else { return }
         let dateString = dateFormatter.string(from: documentDate)
         let fileExtension = selectedFile.pathExtension
         
-        // Format: YYYY-MM-DD_Source_Target.extension
         newFileName = "\(dateString)_\(selectedSourceCompany)_\(selectedTargetCompany).\(fileExtension)"
     }
 
-    // Performs the file renaming
     private func renameFile() {
-        guard let originalURL = selectedFile else { return }
-
-        // Create the destination URL
-        let directory = originalURL.deletingLastPathComponent()
-        let destinationURL = directory.appendingPathComponent(newFileName)
+        guard let bookmark = fileBookmark else {
+            renameMessage = "Error: Bookmark is not available."
+            didSucceed = false
+            return
+        }
 
         do {
-            // Attempt to move (rename) the file
-            try FileManager.default.moveItem(at: originalURL, to: destinationURL)
-            print("File successfully renamed to \(newFileName)")
+            var isStale = false
+            let originalURL = try URL(resolvingBookmarkData: bookmark, options: .withSecurityScope, relativeTo: nil, bookmarkDataIsStale: &isStale)
             
-            // Optionally, reset the app to the beginning
-            // currentStep = 1
-            // selectedFile = nil
-
+            guard originalURL.startAccessingSecurityScopedResource() else {
+                renameMessage = "Error: Could not gain permission to access file."
+                didSucceed = false
+                return
+            }
+            
+            let directory = originalURL.deletingLastPathComponent()
+            let destinationURL = directory.appendingPathComponent(newFileName)
+            try FileManager.default.moveItem(at: originalURL, to: destinationURL)
+            
+            originalURL.stopAccessingSecurityScopedResource()
+            
+            renameMessage = "File successfully renamed!"
+            didSucceed = true
+            
         } catch {
-            print("Error renaming file: \(error.localizedDescription)")
-            // Here you could show an alert to the user
+            renameMessage = "Error: \(error.localizedDescription)"
+            didSucceed = false
         }
     }
 }

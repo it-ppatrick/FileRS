@@ -10,6 +10,7 @@ import SwiftUI
 struct Step1_UploadView: View {
     // These bindings allow this view to share data with the ContentView.
     @Binding var selectedFile: URL?
+    @Binding var fileBookmark: Data? // Binding for the secure bookmark
     @Binding var currentStep: Int
 
     var body: some View {
@@ -20,6 +21,7 @@ struct Step1_UploadView: View {
 
             // If no file is selected, show the button.
             if selectedFile == nil {
+                // The button's action now calls our private function
                 Button(action: selectFile) {
                     Text("Click to select a file")
                         .padding()
@@ -48,16 +50,23 @@ struct Step1_UploadView: View {
         }
     }
 
-    // The function to open the file selection panel.
+    // This function must be inside the Step1_UploadView struct's braces.
     private func selectFile() {
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
 
-        if panel.runModal() == .OK {
-            // Save the chosen file's URL.
-            self.selectedFile = panel.urls.first
+        if panel.runModal() == .OK, let url = panel.urls.first {
+            do {
+                // Create the secure bookmark data
+                let bookmarkData = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
+                self.fileBookmark = bookmarkData // Save the bookmark
+                self.selectedFile = url          // Save the URL
+            } catch {
+                print("Error creating bookmark: \(error.localizedDescription)")
+                // You could show an alert to the user here
+            }
         }
     }
 }

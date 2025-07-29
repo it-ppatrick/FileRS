@@ -8,12 +8,16 @@
 import SwiftUI
 
 struct ContentView: View {
-    // --- State variables for all steps ---
+    // Access the company store from the environment
+    @EnvironmentObject var companyStore: CompanyStore
+    
+    // State variables for all steps
     @State private var documentDate = Date()
     @State private var selectedSourceCompany: String = ""
     @State private var selectedTargetCompany: String = ""
     @State private var currentStep = 1
     @State private var selectedFile: URL?
+    @State private var fileBookmark: Data?
 
     var body: some View {
         VStack(spacing: 20) {
@@ -21,10 +25,11 @@ struct ContentView: View {
                 .font(.largeTitle)
                 .fontWeight(.bold)
 
-            // --- Update this logic to include Step 5 ---
+            // This is the logic that was accidentally removed
             if currentStep == 1 {
                 Step1_UploadView(
                     selectedFile: $selectedFile,
+                    fileBookmark: $fileBookmark,
                     currentStep: $currentStep
                 )
             } else if currentStep == 2 {
@@ -45,6 +50,7 @@ struct ContentView: View {
             } else if currentStep == 5 {
                 Step5_SummaryView(
                     selectedFile: $selectedFile,
+                    fileBookmark: $fileBookmark,
                     documentDate: $documentDate,
                     selectedSourceCompany: $selectedSourceCompany,
                     selectedTargetCompany: $selectedTargetCompany,
@@ -54,6 +60,17 @@ struct ContentView: View {
         }
         .padding()
         .frame(minWidth: 500, minHeight: 450)
+        .onAppear(perform: initializeSelections) // Initializes picker selections
+    }
+    
+    // This function fixes the "Picker selection is invalid" warning
+    private func initializeSelections() {
+        if selectedSourceCompany.isEmpty {
+            selectedSourceCompany = companyStore.sourceCompanies.first?.name ?? ""
+        }
+        if selectedTargetCompany.isEmpty {
+            selectedTargetCompany = companyStore.targetCompanies.first?.name ?? ""
+        }
     }
 }
 
