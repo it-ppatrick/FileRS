@@ -9,7 +9,7 @@ import Foundation
 
 // Defines the structure for a single company
 struct Company: Identifiable, Codable {
-    let id = UUID() // A unique ID for each company
+    var id = UUID() // A unique ID for each company
     var name: String
     var type: CompanyType
 }

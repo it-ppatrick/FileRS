@@ -8,16 +8,10 @@
 import SwiftUI
 
 struct ContentView: View {
-    // --- Add this new state variable for the date ---
-    @State private var documentDate = Date() // Defaults to today's date
-    
-    // --- Add this new state variable for the source company ---
+    // --- State variables for all steps ---
+    @State private var documentDate = Date()
     @State private var selectedSourceCompany: String = ""
-
-    // --- Add this new state variable for the target company ---
     @State private var selectedTargetCompany: String = ""
-
-
     @State private var currentStep = 1
     @State private var selectedFile: URL?
 
@@ -27,7 +21,7 @@ struct ContentView: View {
                 .font(.largeTitle)
                 .fontWeight(.bold)
 
-            // --- Update this logic to include Step 4 ---
+            // --- Update this logic to include Step 5 ---
             if currentStep == 1 {
                 Step1_UploadView(
                     selectedFile: $selectedFile,
@@ -48,10 +42,14 @@ struct ContentView: View {
                     selectedTargetCompany: $selectedTargetCompany,
                     currentStep: $currentStep
                 )
-            }
-            else {
-                // Placeholder for the next steps
-                Text("You are on step \(currentStep)")
+            } else if currentStep == 5 {
+                Step5_SummaryView(
+                    selectedFile: $selectedFile,
+                    documentDate: $documentDate,
+                    selectedSourceCompany: $selectedSourceCompany,
+                    selectedTargetCompany: $selectedTargetCompany,
+                    currentStep: $currentStep
+                )
             }
         }
         .padding()
@@ -61,5 +59,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .environmentObject(CompanyStore()) // Also add it to the preview
+        .environmentObject(CompanyStore())
 }
